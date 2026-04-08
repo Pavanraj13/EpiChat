@@ -37,13 +37,15 @@ drive.mount('/content/drive')
 ---
 
 ## Step 3: Copy Data to Colab Storage
-Create a new cell. **Important:** Change the `DATA_SRC` variable if your Google Drive folder is named something else.
+Create a new cell. **Important:** Set the `DATA_SRC` variable to the exact path of your uploaded folder.
+
+💡 **Pro Tip**: To get the exact path, click the **Folder icon** 📁 on the left sidebar of Colab. Expand `drive` -> `MyDrive`, find your data folder, click the three dots `⋮` next to it, and select **"Copy path"**.
 
 ```python
 import shutil, os
 
-# IMPORTANT: Change this path to exactly where you uploaded the processed folder in your drive!
-DATA_SRC = "/content/drive/MyDrive/epichat_processed"   
+# Paste your copied path below:
+DATA_SRC = "/content/drive/MyDrive/YOUR_FOLDER_NAME"   
 DATA_DST = "/content/EpiChat/data/processed"
 
 print("Copying data to local fast storage... (This takes a few minutes)")
