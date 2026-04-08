@@ -56,7 +56,12 @@ def train_model(args):
     train_dataset = Subset(full_dataset, train_indices)
     val_dataset = Subset(full_dataset, val_indices)
     
+    # NEW: Calculate class distribution in each split
+    train_seizures = sum([full_dataset.labels[i] for i in train_indices])
+    val_seizures = sum([full_dataset.labels[i] for i in val_indices])
+    
     print(f"[INFO] Epoch Split -> Train: {len(train_dataset)} | Val: {len(val_dataset)}")
+    print(f"[INFO] Seizure Count -> Train: {train_seizures} | Val: {val_seizures}")
     
     # DataLoader tuning for RTX 3050 & Colab Pro
     # Increased num_workers in Colab speeds up loading
