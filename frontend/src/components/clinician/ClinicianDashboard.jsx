@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Brain, LogOut, UploadCloud, AlertTriangle, CheckCircle,
@@ -54,24 +54,33 @@ function ScanPanel({ file, setFile, status, setStatus, resultData, setResultData
     setStatus('analyzing');
     const formData = new FormData();
     formData.append('file', file);
+    
+    // Get email from localStorage to identify the patient/clinician
+    const userEmail = localStorage.getItem('epichat_email') || 'clinician@epichat.ai';
+
     try {
-      const res = await fetch('http://localhost:8000/api/upload', { method: 'POST', body: formData });
+      const res = await fetch('http://localhost:8000/api/upload', { 
+        method: 'POST', 
+        body: formData,
+        headers: {
+          'X-User-Email': userEmail
+        }
+      });
       if (!res.ok) throw new Error();
       const data = await res.json();
       await new Promise(r => setTimeout(r, 1500));
       setResultData(data);
       onScanComplete(data, file.name);
       setStatus('result');
-    } catch {
+    } catch (err) {
       await new Promise(r => setTimeout(r, 1500));
-      const fallback = { result: 'healthy', risk_score: 5.2, seizure_type: 'None', risk_score: 5.2 };
-      setResultData(fallback);
-      onScanComplete(fallback, file?.name || 'unknown.edf');
-      setStatus('result');
+      setStatus('error');
+      console.error("Analysis failed:", err);
     }
   };
 
   const hasSeizure = resultData?.result === 'seizure';
+  const isError = status === 'error';
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -144,6 +153,15 @@ function ScanPanel({ file, setFile, status, setStatus, resultData, setResultData
             style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--med-border)', color: 'var(--med-text-muted)', padding: '8px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.8rem' }}>
             Scan Another File
           </button>
+        </div>
+      )}
+
+      {isError && (
+        <div style={{ padding: '24px', background: 'rgba(244,63,94,0.07)', border: '2px solid rgba(244,63,94,0.3)', borderRadius: '16px', textAlign: 'center' }}>
+          <AlertTriangle size={32} style={{ color: 'var(--med-alert)', margin: '0 auto 12px' }} />
+          <h3 style={{ color: 'var(--med-alert)', marginBottom: '8px' }}>Analysis Failed</h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--med-text-muted)', marginBottom: '16px' }}>We couldn't reach the AI engine. Please ensure your backend server is running.</p>
+          <button onClick={() => setStatus('idle')} style={{ background: 'var(--med-alert)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>Try Again</button>
         </div>
       )}
     </div>
@@ -294,13 +312,36 @@ export default function ClinicianDashboard() {
     navigate('/login');
   };
 
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/records?email=${email}`);
+        if (res.ok) {
+          const data = await res.json();
+          setHistory(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch scan history:", err);
+      }
+    };
+    fetchHistory();
+  }, [email]);
+
   const onScanComplete = (data, filename) => {
-    setHistory(prev => [{
-      file: filename, result: data.result,
-      risk: data.risk_score, type: data.seizure_type,
-      date: new Date().toLocaleDateString('en-IN'),
-      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-    }, ...prev.slice(0, 9)]);
+    // We can either update local state or just refetch from DB
+    // Let's refetch to be sure we have the DB state
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/records?email=${email}`);
+        if (res.ok) {
+          const data = await res.json();
+          setHistory(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch updated scan history:", err);
+      }
+    };
+    fetchHistory();
   };
 
   const handleNavClick = (id) => {

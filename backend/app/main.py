@@ -6,7 +6,11 @@ from pathlib import Path
 # Fix python parsing path
 sys.path.append(str(Path(__file__).parent))
 
-from routers import upload
+from routers import upload, records, chatbot
+from app.database import init_db
+
+# Initialize Database on startup
+init_db()
 
 app = FastAPI(title="EpiChat Inference API", version="2.0")
 
@@ -21,6 +25,8 @@ app.add_middleware(
 
 # Include core routers
 app.include_router(upload.router)
+app.include_router(records.router)
+app.include_router(chatbot.router)
 
 @app.get("/")
 def health_check():

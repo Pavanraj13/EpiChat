@@ -62,7 +62,7 @@ function StatusPanel({ latestResult, onContact }) {
   );
 }
 
-function ScanPanel({ file, setFile, status, setStatus, resultData, setResultData, onScanComplete }) {
+function ScanPanel({ file, setFile, status, setStatus, resultData, setResultData, onScanComplete, email }) {
   const inputRef = useRef(null);
 
   const handleFileChange = (e) => {
@@ -83,23 +83,28 @@ function ScanPanel({ file, setFile, status, setStatus, resultData, setResultData
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await fetch('http://localhost:8000/api/upload', { method: 'POST', body: formData });
+      const res = await fetch('http://localhost:8000/api/upload', { 
+        method: 'POST', 
+        body: formData,
+        headers: {
+          'X-User-Email': email
+        }
+      });
       if (!res.ok) throw new Error();
       const data = await res.json();
       await new Promise(r => setTimeout(r, 1500));
       setResultData(data);
       onScanComplete(data, file.name);
       setStatus('result');
-    } catch {
+    } catch (err) {
       await new Promise(r => setTimeout(r, 1500));
-      const fallback = { result: 'healthy', risk_score: 4.2, seizure_type: 'None' };
-      setResultData(fallback);
-      onScanComplete(fallback, file?.name || 'unknown.edf');
-      setStatus('result');
+      setStatus('error');
+      console.error("Scan failed:", err);
     }
   };
 
   const hasSeizure = resultData?.result === 'seizure';
+  const isError = status === 'error';
 
   return (
     <div style={{ maxWidth: '560px', margin: '0 auto' }}>
@@ -161,6 +166,15 @@ function ScanPanel({ file, setFile, status, setStatus, resultData, setResultData
             style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--med-border)', color: 'var(--med-text-muted)', padding: '8px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.8rem' }}>
             Scan Another File
           </button>
+        </div>
+      )}
+
+      {isError && (
+        <div style={{ padding: '24px', background: 'rgba(244,63,94,0.07)', border: '2px solid rgba(244,63,94,0.3)', borderRadius: '16px', textAlign: 'center' }}>
+          <AlertTriangle size={32} style={{ color: 'var(--med-alert)', margin: '0 auto 12px' }} />
+          <h3 style={{ color: 'var(--med-alert)', marginBottom: '8px' }}>Analysis Failed</h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--med-text-muted)', marginBottom: '16px' }}>We couldn't reach the AI engine. Please ensure your backend server is running.</p>
+          <button onClick={() => setStatus('idle')} style={{ background: 'var(--med-alert)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>Try Again</button>
         </div>
       )}
     </div>
@@ -262,13 +276,35 @@ export default function PatientHome() {
     navigate('/login');
   };
 
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/records?email=${email}`);
+        if (res.ok) {
+          const data = await res.json();
+          setHistory(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch scan history:", err);
+      }
+    };
+    fetchHistory();
+  }, [email]);
+
   const onScanComplete = (data, filename) => {
-    setHistory(prev => [{
-      file: filename, result: data.result,
-      risk: data.risk_score, type: data.seizure_type,
-      date: new Date().toLocaleDateString('en-IN'),
-      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-    }, ...prev.slice(0, 9)]);
+    // Refresh history from database to ensure metadata is consistent
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/records?email=${email}`);
+        if (res.ok) {
+          const data = await res.json();
+          setHistory(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch updated scan history:", err);
+      }
+    };
+    fetchHistory();
   };
 
   const handleContact = () => {
@@ -284,7 +320,7 @@ export default function PatientHome() {
 
   const panels = {
     status: <StatusPanel latestResult={latestResult} onContact={handleContact} />,
-    scan: <ScanPanel file={file} setFile={setFile} status={status} setStatus={setStatus} resultData={resultData} setResultData={setResultData} onScanComplete={onScanComplete} />,
+    scan: <ScanPanel file={file} setFile={setFile} status={status} setStatus={setStatus} resultData={resultData} setResultData={setResultData} onScanComplete={onScanComplete} email={email} />,
     history: <HistoryPanel history={history} />,
     medication: <MedicationPanel />,
     chatbot: <div style={{ height: '100%', maxWidth: '500px', margin: '0 auto' }}><Chatbot /></div>,
