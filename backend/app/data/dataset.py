@@ -17,6 +17,7 @@ class EEGEpochDataset(Dataset):
         
         self.epoch_files = []
         self.labels = []
+        self.subject_ids = []   # New: Track subjects for honest splitting
         
         # Iteratively load all .json metadata files
         if not self.data_dir.exists():
@@ -33,6 +34,9 @@ class EEGEpochDataset(Dataset):
             if not npy_file.exists():
                 continue
             
+            # Extract Subject ID (e.g., "chb01" from "chb01_03_meta.json")
+            subject_id = meta_file.stem.split('_')[0]
+            
             with open(meta_file, 'r') as f:
                 meta = json.load(f)
             
@@ -40,6 +44,7 @@ class EEGEpochDataset(Dataset):
             for i, label in enumerate(meta['labels']):
                 self.epoch_files.append((npy_file, i))
                 self.labels.append(label)
+                self.subject_ids.append(subject_id)
 
     def __len__(self):
         return len(self.epoch_files)

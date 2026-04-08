@@ -24,12 +24,23 @@ def evaluate_fast():
         print(f"[ERROR] Model weights missing at {model_path}")
         return
         
-    print(f"[INFO] Initializing dataset (Max 5 datasets for speed)...")
-    dataset = EEGEpochDataset(data_dir="C:/Users/U.PAVAN RAJ/Epichat_Data/processed/chbmit", augment=False, max_files=5)
+    print(f"[INFO] Initializing dataset (Targeting Seizure-Rich Files)...")
+    # We specifically include chb03 files found to have seizures to ensure Sensitivity is tested
+    dataset = EEGEpochDataset(data_dir="C:/Users/U.PAVAN RAJ/Epichat_Data/processed/chbmit", augment=False, max_files=100)
     
+    # Filter to ensure we have a good mix if possible, or just use the first 100 which includes chb01 and chb03
     if len(dataset) == 0:
         print("[ERROR] Dataset empty or could not be loaded from C:/Users/U.PAVAN RAJ/Epichat_Data/processed/chbmit")
         return
+
+    # Count classes
+    targets = [t for _, t in dataset]
+    class_0 = targets.count(0)
+    class_1 = targets.count(1)
+    print(f"[INFO] Dataset loaded: {class_0} Non-Seizure, {class_1} Seizure epochs")
+    
+    if class_1 == 0:
+        print("[WARNING] No seizure epochs found in the first 100 files. Model Sensitivity cannot be verified.")
         
     loader = DataLoader(dataset, batch_size=64, shuffle=False)
     

@@ -2,9 +2,11 @@ import argparse
 import os
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, random_split, Subset
 from tqdm import tqdm
 import sys
+import random
+import numpy as np
 
 # Ensure backend imports work
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -33,13 +35,28 @@ def train_model(args):
         
     print(f"[INFO] Found {len(full_dataset)} total EEG epochs.")
     
-    val_size = int(0.2 * len(full_dataset))
-    train_size = len(full_dataset) - val_size
+    # NEW: Subject-Wise Honest Splitting
+    unique_subjects = sorted(list(set(full_dataset.subject_ids)))
+    print(f"[INFO] Total Unique Subjects: {len(unique_subjects)} ({unique_subjects})")
     
-    # We use a fixed generator seed for reproducibility
-    train_dataset, val_dataset = random_split(
-        full_dataset, [train_size, val_size], generator=torch.Generator().manual_seed(42)
-    )
+    # Shuffle subjects for randomness
+    random.seed(42)
+    random.shuffle(unique_subjects)
+    
+    val_subj_count = max(1, int(0.2 * len(unique_subjects)))
+    val_subjects = unique_subjects[:val_subj_count]
+    train_subjects = unique_subjects[val_subj_count:]
+    
+    print(f"[INFO] Training on Subjects:   {train_subjects}")
+    print(f"[INFO] Validating on Subjects: {val_subjects}")
+    
+    train_indices = [i for i, s in enumerate(full_dataset.subject_ids) if s in train_subjects]
+    val_indices = [i for i, s in enumerate(full_dataset.subject_ids) if s in val_subjects]
+    
+    train_dataset = Subset(full_dataset, train_indices)
+    val_dataset = Subset(full_dataset, val_indices)
+    
+    print(f"[INFO] Epoch Split -> Train: {len(train_dataset)} | Val: {len(val_dataset)}")
     
     # DataLoader tuning for RTX 3050 & Colab Pro
     # Increased num_workers in Colab speeds up loading
