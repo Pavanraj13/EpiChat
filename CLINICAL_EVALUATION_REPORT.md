@@ -30,7 +30,13 @@ Evaluated on **20,584 EEG segments** using the finalized `epichat_realistic.pt` 
 | **Specificity** | **99.51%** | Extremely low false-alarm rate (less than 1 in 200). |
 | **ROC-AUC Score** | **0.9402** | Excellent ability to distinguish between classes. |
 
-### Confusion Matrix (Test Set)
+### Confusion Matrix (Visual Distribution)
+![Confusion Matrix](backend/assets/confusion_matrix.png)
+
+### Performance Curvature (ROC)
+![ROC Curve](backend/assets/roc_curve.png)
+
+### Numeric Metrics (Test Set)
 -   **True Negatives (Correct Background)**: 19,488
 -   **True Positives (Correct Seizures)**: 14
 -   **False Negatives (Missed Seizures)**: 3
