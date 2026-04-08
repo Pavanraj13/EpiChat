@@ -32,7 +32,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 # Load Model Globally
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = EpiChatModel()
-model_path = Path(__file__).resolve().parent.parent.parent / "model_weights" / "epichat_best.pt"
+model_path = Path(__file__).resolve().parent.parent.parent / "model_weights" / "epichat_realistic.pt"
 
 try:
     if model_path.exists():

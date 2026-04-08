@@ -19,7 +19,7 @@ def evaluate_fast():
     print(f"[INFO] Using Device for Fast Eval: {device}")
     
     # Check for weights
-    model_path = "backend/model_weights/epichat_best.pt"
+    model_path = "backend/model_weights/epichat_realistic.pt"
     if not os.path.exists(model_path):
         print(f"[ERROR] Model weights missing at {model_path}")
         return
