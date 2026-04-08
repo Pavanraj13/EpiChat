@@ -137,15 +137,28 @@ function ScanPanel({ file, setFile, status, setStatus, resultData, setResultData
             {hasSeizure ? <AlertTriangle size={28} style={{ color: 'var(--med-alert)' }} /> : <CheckCircle size={28} style={{ color: 'var(--med-safe)' }} />}
             <div>
               <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: '1.3rem', margin: 0, color: hasSeizure ? 'var(--med-alert)' : 'var(--med-safe)' }}>
-                {hasSeizure ? 'Seizure Detected' : 'All Clear!'}
+                {hasSeizure ? '⚡ Epileptic Activity Detected' : '✅ No Epileptic Activity'}
               </h3>
               <p style={{ color: 'var(--med-text-muted)', fontSize: '0.82rem', margin: 0 }}>
-                {hasSeizure ? `Risk: ${resultData.risk_score}% · Please contact your doctor.` : `Risk: ${resultData.risk_score}% · Brain activity is normal.`}
+                {resultData.seizure_type || (hasSeizure ? 'Seizure Activity Found' : 'Brain activity is normal')}
               </p>
             </div>
           </div>
+
+          <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', marginBottom: '12px' }}>
+            <p style={{ fontSize: '0.72rem', color: 'var(--med-text-muted)', marginBottom: '2px' }}>Seizure Probability in this EEG</p>
+            <p style={{ fontWeight: '700', fontSize: '1.4rem', color: hasSeizure ? 'var(--med-alert)' : 'var(--med-safe)', fontFamily: 'Outfit,sans-serif' }}>{resultData.risk_score ?? resultData.seizure_probability ?? 'N/A'}%</p>
+            <p style={{ fontSize: '0.72rem', color: 'var(--med-text-muted)' }}>This is the AI's confidence that this recording contains an active epileptic seizure.</p>
+          </div>
+
+          {resultData.clinical_note && (
+            <div style={{ padding: '10px 14px', background: hasSeizure ? 'rgba(244,63,94,0.05)' : 'rgba(56,189,248,0.05)', border: `1px solid ${hasSeizure ? 'rgba(244,63,94,0.2)' : 'rgba(56,189,248,0.15)'}`, borderRadius: '10px', marginBottom: '12px' }}>
+              <p style={{ fontSize: '0.8rem', color: hasSeizure ? 'var(--med-alert)' : 'var(--med-accent)' }}>🩺 {resultData.clinical_note}</p>
+            </div>
+          )}
+
           <button onClick={() => { setStatus('idle'); setFile(null); setResultData(null); }}
-            style={{ marginTop: '12px', width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--med-border)', color: 'var(--med-text-muted)', padding: '8px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.8rem' }}>
+            style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--med-border)', color: 'var(--med-text-muted)', padding: '8px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.8rem' }}>
             Scan Another File
           </button>
         </div>
