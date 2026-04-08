@@ -12,7 +12,7 @@ This document contains everything you need to successfully train the EpiChat mod
 1. Navigate to: [Google Colab](https://colab.research.google.com/)
 2. Create a **New Notebook**.
 3. Go to the top menu: **Runtime > Change runtime type**.
-4. Select **A100 GPU** or **V100 GPU** and make sure **High-RAM** is enabled.
+4. Select **A100 GPU** or **V100 GPU** *(If neither are available, selecting the **T4 GPU** is perfectly fine!)* and make sure **High-RAM** is enabled.
 5. Click **Save**.
 
 ---
