@@ -18,7 +18,8 @@ This document contains everything you need to successfully train the EpiChat mod
 ---
 
 ## Step 2: Setup Environment & Clone Repo
-Create a new cell, paste the following code, and run it. *(When it asks for Google Drive permission, click Allow)*.
+Create a new cell, paste the following code, and run it. 
+*(⚠️ **CRITICAL:** When it asks for Google Drive permission, be absolutely sure to select **YOUR OWN Google Account** where you uploaded the data, NOT the owner of the Colab Pro account! This ensures the weights are safely stored in your personal Google Drive).*
 
 ```python
 # 1. Clone your EpiChat repo
