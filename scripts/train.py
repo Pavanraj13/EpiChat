@@ -35,20 +35,35 @@ def train_model(args):
         
     print(f"[INFO] Found {len(full_dataset)} total EEG epochs.")
     
-    # NEW: File-Wise Honest Splitting (Best for small subject counts)
+    # NEW: Stratified File-Wise Splitting (Gauranteed Seizure Balance)
     unique_files = sorted(list(set(full_dataset.file_ids)))
-    print(f"[INFO] Total Unique Recording Files: {len(unique_files)}")
     
-    # Shuffle files for randomness
+    # Identify which files have seizures
+    seizure_files = set()
+    for i, label in enumerate(full_dataset.labels):
+        if label == 1:
+            seizure_files.add(full_dataset.file_ids[i])
+            
+    pos_files = [f for f in unique_files if f in seizure_files]
+    neg_files = [f for f in unique_files if f not in seizure_files]
+    
+    print(f"[INFO] Total Files: {len(unique_files)} (Seizure-Positive: {len(pos_files)}, Background-Only: {len(neg_files)})")
+    
+    # Shuffle both for randomness
     random.seed(42)
-    random.shuffle(unique_files)
+    random.shuffle(pos_files)
+    random.shuffle(neg_files)
     
-    val_file_count = max(1, int(0.2 * len(unique_files)))
-    val_files = unique_files[:val_file_count]
-    train_files = unique_files[val_file_count:]
+    # Split both pools 80/20
+    def split_list(l, ratio=0.2):
+        val_count = max(1 if len(l) > 0 else 0, int(ratio * len(l)))
+        return l[val_count:], l[:val_count]
+        
+    train_pos, val_pos = split_list(pos_files)
+    train_neg, val_neg = split_list(neg_files)
     
-    # We filter to ensure that if possible, some seizures are in Val
-    # (By shuffling, this is statistically likely if we have multiple seizure files)
+    train_files = train_pos + train_neg
+    val_files = val_pos + val_neg
     
     train_indices = [i for i, f in enumerate(full_dataset.file_ids) if f in train_files]
     val_indices = [i for i, f in enumerate(full_dataset.file_ids) if f in val_files]
@@ -60,9 +75,9 @@ def train_model(args):
     train_seizures = sum([full_dataset.labels[i] for i in train_indices])
     val_seizures = sum([full_dataset.labels[i] for i in val_indices])
     
-    print(f"[INFO] File Split -> Train: {len(train_files)} | Val: {len(val_files)}")
-    print(f"[INFO] Epoch Split -> Train: {len(train_dataset)} | Val: {len(val_dataset)}")
-    print(f"[INFO] Seizure Count -> Train: {train_seizures} | Val: {val_seizures}")
+    print(f"[INFO] Split -> Train Files: {len(train_files)} | Val Files: {len(val_files)}")
+    print(f"[INFO] Split -> Train Epochs: {len(train_dataset)} | Val Epochs: {len(val_dataset)}")
+    print(f"[INFO] Seizure Count -> Train Seizures: {train_seizures} | Val Seizures: {val_seizures}")
     
     # DataLoader tuning for RTX 3050 & Colab Pro
     # Increased num_workers in Colab speeds up loading
