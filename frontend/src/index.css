@@ -19,6 +19,21 @@
   
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
+
+  /* Medical Dark Mode Tokens */
+  --med-bg: #0f172a;
+  --med-surface: #1e293b;
+  --med-border: rgba(148, 163, 184, 0.12);
+  --med-safe: #10b981;
+  --med-safe-glow: rgba(16, 185, 129, 0.35);
+  --med-alert: #f43f5e;
+  --med-alert-glow: rgba(244, 63, 94, 0.4);
+  --med-warn: #f59e0b;
+  --med-warn-glow: rgba(245, 158, 11, 0.35);
+  --med-text: #e2e8f0;
+  --med-text-muted: #64748b;
+  --med-accent: #38bdf8;
+  --med-accent-glow: rgba(56, 189, 248, 0.35);
 }
 
 * {
