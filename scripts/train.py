@@ -35,23 +35,23 @@ def train_model(args):
         
     print(f"[INFO] Found {len(full_dataset)} total EEG epochs.")
     
-    # NEW: Subject-Wise Honest Splitting
-    unique_subjects = sorted(list(set(full_dataset.subject_ids)))
-    print(f"[INFO] Total Unique Subjects: {len(unique_subjects)} ({unique_subjects})")
+    # NEW: File-Wise Honest Splitting (Best for small subject counts)
+    unique_files = sorted(list(set(full_dataset.file_ids)))
+    print(f"[INFO] Total Unique Recording Files: {len(unique_files)}")
     
-    # Shuffle subjects for randomness
+    # Shuffle files for randomness
     random.seed(42)
-    random.shuffle(unique_subjects)
+    random.shuffle(unique_files)
     
-    val_subj_count = max(1, int(0.2 * len(unique_subjects)))
-    val_subjects = unique_subjects[:val_subj_count]
-    train_subjects = unique_subjects[val_subj_count:]
+    val_file_count = max(1, int(0.2 * len(unique_files)))
+    val_files = unique_files[:val_file_count]
+    train_files = unique_files[val_file_count:]
     
-    print(f"[INFO] Training on Subjects:   {train_subjects}")
-    print(f"[INFO] Validating on Subjects: {val_subjects}")
+    # We filter to ensure that if possible, some seizures are in Val
+    # (By shuffling, this is statistically likely if we have multiple seizure files)
     
-    train_indices = [i for i, s in enumerate(full_dataset.subject_ids) if s in train_subjects]
-    val_indices = [i for i, s in enumerate(full_dataset.subject_ids) if s in val_subjects]
+    train_indices = [i for i, f in enumerate(full_dataset.file_ids) if f in train_files]
+    val_indices = [i for i, f in enumerate(full_dataset.file_ids) if f in val_files]
     
     train_dataset = Subset(full_dataset, train_indices)
     val_dataset = Subset(full_dataset, val_indices)
@@ -60,6 +60,7 @@ def train_model(args):
     train_seizures = sum([full_dataset.labels[i] for i in train_indices])
     val_seizures = sum([full_dataset.labels[i] for i in val_indices])
     
+    print(f"[INFO] File Split -> Train: {len(train_files)} | Val: {len(val_files)}")
     print(f"[INFO] Epoch Split -> Train: {len(train_dataset)} | Val: {len(val_dataset)}")
     print(f"[INFO] Seizure Count -> Train: {train_seizures} | Val: {val_seizures}")
     
