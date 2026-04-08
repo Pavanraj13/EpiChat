@@ -270,6 +270,7 @@ function ReportPanel({ history }) {
 export default function ClinicianDashboard() {
   const navigate = useNavigate();
   const [active, setActive] = useState('scan');
+  const [animKey, setAnimKey] = useState(0);
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState('idle');
   const [resultData, setResultData] = useState(null);
@@ -290,6 +291,11 @@ export default function ClinicianDashboard() {
       date: new Date().toLocaleDateString('en-IN'),
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
     }, ...prev.slice(0, 9)]);
+  };
+
+  const handleNavClick = (id) => {
+    setActive(id);
+    setAnimKey(k => k + 1);
   };
 
   const panels = {
@@ -318,7 +324,7 @@ export default function ClinicianDashboard() {
 
         <nav style={{ padding: '12px 10px', flex: 1 }}>
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setActive(id)} style={{
+            <button key={id} onClick={() => handleNavClick(id)} style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
               padding: '10px 12px', borderRadius: '10px', border: 'none', cursor: 'pointer',
               marginBottom: '4px', fontFamily: 'Inter,sans-serif', fontSize: '0.875rem', fontWeight: '500',
@@ -341,11 +347,20 @@ export default function ClinicianDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
+      <main
+        key={animKey}
+        style={{ flex: 1, overflowY: 'auto', padding: '32px', animation: 'fadeInUp 0.35s cubic-bezier(0.22,1,0.36,1) both' }}
+      >
         {panels[active] || null}
       </main>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
